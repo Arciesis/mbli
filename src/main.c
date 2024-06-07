@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include "lua_source_reader.h"
+#include "mbli_error.h"
+#include "mbli_lexer.h"
 
 int main(int argc, const char** argv) {
     int ext_res = check_extension(argc, argv);
@@ -35,6 +37,26 @@ int main(int argc, const char** argv) {
         return read_src_res;
     }
 
+    Lexer* lxr = (Lexer*)malloc(sizeof(Lexer));
+    int lxr_init_res = init_lexer(lxr, reader->buf);
+    if (lxr_init_res) {
+        return lxr_init_res;
+    }
+    
+    while (lxr->current_char != '\0') {
+        //TODO: Tokenization logic goes here
+        printf("%c", lxr->current_char);
+        int move_res = move_on_char(lxr);
+        if (ENULLPTR == move_res) {
+            return move_res;
+        }
+
+        if (EEBUF == move_res) {
+            break;
+        }
+    }
+
     free_source(reader);
-    return 0;
+    free_lexer(lxr);
+    return SUCCESS;
 }
