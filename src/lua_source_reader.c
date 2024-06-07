@@ -19,6 +19,7 @@
  *  @return int 0 in case of success and a positive int in case of error
  */
 int check_extension(int argc, const char** argv) {
+    errno = 0;
     // since argv[1] is the first arg of the prog and argv[0] the name of the
     // program.
     if (argc != 2) {
@@ -33,7 +34,7 @@ int check_extension(int argc, const char** argv) {
         return EINVAL;
     }
 
-    char prog_name[input_len];
+    char prog_name[input_len + 1];
     strcpy(prog_name, argv[1]);
 
     // Pointer arithmetic to point to the lasts char of the argument of the prog
@@ -52,7 +53,7 @@ int check_extension(int argc, const char** argv) {
         return EINVAL;
     }
 
-    return 0;
+    return errno;
 }
 
 /**
