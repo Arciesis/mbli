@@ -47,63 +47,62 @@ int check_extension(int argc, const char** argv) {
 
     int result = strcmp(file_format, extension);
 
-    if (result == 0) {
-        printf("result: %d, file format is: %s", result, file_format);
-    } else {
+    if (result != 0) {
         return EINVAL;
     }
 
-    return errno;
+    return SUCCESS;
 }
 
+// TODO: use the freer function instead of manually do it
 /**
  * Initialize the Source Reader.
  *
  * @param reader The SourceReader pointer.
  * @param filename the source code filename to read.
  */
-void init_source_code(SourceReader* reader, const char* filename) {
+int init_source_code(SourceReader* reader, const char* filename) {
     errno = 0;
     reader->file = fopen(filename, "r");
     if (!reader->file) {
-        return;
+        return ENULLPTR;
     }
 
     int seek_res = (size_t)fseek(reader->file, 0, SEEK_END);
-    if (!seek_res) {
-        errno = ENOEOF;
-        return;
+    if (seek_res) {
+        if (errno) {
+            printf("ERROR: %s\n", strerror(errno));
+            return errno;
+        }
+        return ESEEK;
     }
 
     long file_size = ftell(reader->file);
     if (-1L == file_size) {
-        return;
+        if (errno) {
+            printf("ERROR: %s\n", strerror(errno));
+            return errno;
+        }
+        return ESEEK;
     }
-    reader->buf_size = (size_t)file_size;
+    reader->buf_size = (size_t)(file_size + 1);
 
     rewind(reader->file);
-    if (!errno) {
-        return;
+    if (errno) {
+        printf("ERROR: %s\n", strerror(errno));
+        return errno;
     }
 
-    reader->buf = (const char*)malloc(sizeof(const char*) * reader->buf_size);
-    if (NULL == reader->buf) {
-        free((void*)reader->buf);
-        return;
+    reader->buf = (char*)malloc(sizeof(char*) * reader->buf_size);
+    if (!reader->buf) {
+        if (errno) {
+            printf("ERROR: %s\n", strerror(errno));
+            return errno;
+        }
+        return EMALLOC;
     }
 
-    fread((void*)reader->buf, sizeof(const char*), reader->buf_size, reader->file);
-    if (!ferror(reader->file)) {
-        errno = EIO;
-        free((void*)reader->buf);
-        return;
-    }
-
-    if (!feof(reader->file)) {
-        errno = ENOEOF;
-        free((void*)reader->buf);
-        return;
-    }
+    return SUCCESS;
 }
 
 /**
@@ -121,4 +120,29 @@ void free_source(SourceReader* reader) {
         }
         free(reader);
     }
+}
+
+/**
+ * Fill in the Buffer off of the source code.
+ *
+ * @param reader the source code reader
+ *
+ * @return error code or 0 in case of success
+ */
+int read_src_to_buf(SourceReader* reader) {
+    errno = 0;
+    if (!reader->file) {
+        return ENULLPTR;
+    }
+
+    for (size_t i = 0; i < reader->buf_size; i++) {
+        int c = fgetc(reader->file);
+        if (feof(reader->file)) {
+            break;
+        }
+        reader->buf[i] = c;
+    }
+    reader->buf[reader->buf_size] = '\0';
+
+    return SUCCESS;
 }

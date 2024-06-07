@@ -6,11 +6,12 @@
 typedef struct {
     FILE* file;
     size_t buf_size;
-    const char* buf;
+    char* buf;
 } SourceReader;
 
 int check_extension(int argc, const char **argv);
-void init_source_code(SourceReader* reader, const char* filename);
+int init_source_code(SourceReader* reader, const char* filename);
 void free_source(SourceReader* reader);
+int read_src_to_buf(SourceReader* reader);
 
 #endif
