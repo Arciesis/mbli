@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,19 +43,34 @@ int main(int argc, const char** argv) {
     if (lxr_init_res) {
         return lxr_init_res;
     }
-    
-    while (lxr->current_char != '\0') {
-        //TODO: Tokenization logic goes here
-        printf("%c", lxr->current_char);
-        int move_res = move_on_char(lxr);
-        if (ENULLPTR == move_res) {
-            return move_res;
-        }
 
-        if (EEBUF == move_res) {
-            break;
-        }
-    }
+    /* char lexeme[256] = ""; */
+    /* size_t cpt_char = 0; */
+    /* int forward_res = 0; */
+    /* while (lxr->current_char != '\0') { */
+        /* if (isspace(lxr->current_char)) { */
+            /* lexeme[cpt_char] = '\0'; */
+            /* // printf("%s\n", lexeme);  // Tokenzie here ! */
+            /* cpt_char = 0; */
+            /* forward_res = forward_buf(lxr); */
+            /* if (ENULLPTR == forward_res) { */
+                /* return forward_res; */
+            /* } */
+            /* if (EEBUF == forward_res) { */
+                /* break; */
+            /* } */
+            /* continue; */
+        /* } */
+        /* lexeme[cpt_char] = lxr->current_char; */
+        /* cpt_char++; */
+        /* forward_res = forward_buf(lxr); */
+        /* if (ENULLPTR == forward_res) { */
+            /* return forward_res; */
+        /* } */
+        /* if (EEBUF == forward_res) { */
+            /* break; */
+        /* } */
+    /* } */
 
     free_source(reader);
     free_lexer(lxr);

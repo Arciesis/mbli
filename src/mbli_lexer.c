@@ -2,6 +2,7 @@
 
 #include <asm-generic/errno-base.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,7 +32,7 @@ void free_lexer(Lexer* lxr) {
     }
 }
 
-int move_on_char(Lexer* lxr) {
+int forward_buf(Lexer* lxr) {
     if (!lxr) {
         return ENULLPTR;
     }
@@ -45,6 +46,7 @@ int move_on_char(Lexer* lxr) {
 
     return SUCCESS;
 }
+
 
 int init_token(Token* tkn, const char* value, TokenType type) {
     errno = 0;

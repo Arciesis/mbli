@@ -35,6 +35,7 @@ typedef enum {
     operator,
     delimiter,
     comment,
+    whitespace,
 } TokenType;
 
 /**
@@ -50,7 +51,7 @@ typedef struct {
 
 int init_lexer(Lexer* lxr, char* value);
 void free_lexer(Lexer* lxr);
-int move_on_char(Lexer* lxr);
+int forward_buf(Lexer* lxr);
 
 
 int init_token(Token* tkn, const char* value, TokenType type);
