@@ -1,11 +1,12 @@
-#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "lua_source_reader.h"
+#include "mbli_common.h"
 #include "mbli_error.h"
+#include "mbli_fsm.h"
 #include "mbli_lexer.h"
 
 int main(int argc, const char** argv) {
@@ -44,33 +45,7 @@ int main(int argc, const char** argv) {
         return lxr_init_res;
     }
 
-    /* char lexeme[256] = ""; */
-    /* size_t cpt_char = 0; */
-    /* int forward_res = 0; */
-    /* while (lxr->current_char != '\0') { */
-        /* if (isspace(lxr->current_char)) { */
-            /* lexeme[cpt_char] = '\0'; */
-            /* // printf("%s\n", lexeme);  // Tokenzie here ! */
-            /* cpt_char = 0; */
-            /* forward_res = forward_buf(lxr); */
-            /* if (ENULLPTR == forward_res) { */
-                /* return forward_res; */
-            /* } */
-            /* if (EEBUF == forward_res) { */
-                /* break; */
-            /* } */
-            /* continue; */
-        /* } */
-        /* lexeme[cpt_char] = lxr->current_char; */
-        /* cpt_char++; */
-        /* forward_res = forward_buf(lxr); */
-        /* if (ENULLPTR == forward_res) { */
-            /* return forward_res; */
-        /* } */
-        /* if (EEBUF == forward_res) { */
-            /* break; */
-        /* } */
-    /* } */
+    run_fsm(lxr);
 
     free_source(reader);
     free_lexer(lxr);

@@ -2,7 +2,6 @@
 #define MBLI_LEXER_H
 
 #include <stdlib.h>
-#include <string.h>
 
 /**
  * @struct representing the lexer process.
@@ -31,9 +30,9 @@ typedef struct {
 typedef enum {
     keyword,
     identifiers,
-    literal,
-    operator,
-    delimiter,
+    literals,
+    operators,
+    delimiters,
     comment,
     whitespace,
 } TokenType;

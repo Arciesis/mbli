@@ -2,53 +2,61 @@
 #define MBLI_FSM_H
 
 #include "mbli_lexer.h"
+
 typedef enum {
-	st_start,
-	st_any,
-	st_innumber,
-	st_inkeyword,
-	st_space,
-	st_end,
+    st_start,
+    st_innumber,
+    st_inkeyword,
+    st_inspace,
+    st_newl,
+    st_inidentifier,
+    st_any,
+    st_end,
 } FSM_State;
 
 typedef enum {
-	ev_init,
-	ev_number,
-	ev_alpha,
-	ev_space,
+    ev_number,
+    ev_alpha,
+    ev_space,
+    ev_newl,
     ev_end,
-	ev_any,
-	ev_error,
+    ev_any,
+    ev_error,
 } FSM_Event;
 
 typedef struct {
-	FSM_State state;
-	FSM_Event event;
-	FSM_State (*fn)(void);
+    FSM_State actual_st;
+    char lexeme[512];
+    Lexer* lxr;
+    size_t line;
+    size_t column;
+    size_t lexeme_pos;
+    // TODO: Maybe add a queue here for the token implementation !
+} FiniteStateMachine;
+
+typedef void (*stateFunction)(FiniteStateMachine* fsm);
+
+typedef struct {
+    FSM_State state;
+    FSM_Event event;
+    stateFunction fn;
 } FSM_Transition;
 
-FSM_State initialize_fsm(void);
-FSM_State error(void);
-FSM_State fatal_fsm_error(void);
-FSM_State now_space(void);
-FSM_State now_number(void);
-FSM_State now_alpha(void);
-FSM_State reach_end(void);
+void handle_number(FiniteStateMachine* fsm);
+void handle_keyword(FiniteStateMachine* fsm);
+void handle_space(FiniteStateMachine* fsm);
+void handle_newl(FiniteStateMachine* fsm);
+void handle_end(FiniteStateMachine* fsm);
+void error(FiniteStateMachine* fsm);
+void fatal_fsm_error(FiniteStateMachine* fsm);
 
-FSM_Transition ruleset[] = {
-	{st_start, ev_init, &initialize_fsm},
-    {st_start, ev_space, &now_space},
-    {st_start, ev_number, &now_number},
-    {st_start, ev_alpha, &now_alpha},
-    {st_any, ev_end, &reach_end},
-	{st_any, ev_error, &error},
-	{st_any, ev_any, &fatal_fsm_error},
-};
+extern FSM_Transition ruleset[];
 
-#define RULESET_COUNT (sizeof(ruleset)/sizeof(*ruleset))
+#define RULESET_COUNT (sizeof(ruleset) / sizeof(*ruleset))
 
-int run_fsm(Lexer* lxr);
+void run_fsm(Lexer* lxr);
 FSM_Event get_next_event(Lexer* lxr);
-
+FiniteStateMachine* init_fsm(Lexer* lxr);
+void free_fsm(FiniteStateMachine* fsm);
 
 #endif
