@@ -2,12 +2,18 @@
 
 #include <asm-generic/errno-base.h>
 #include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "mbli_error.h"
 
+/** Initialize the lexer
+ *
+ * @param Lexer* the allocated pointer in which the data must be stored.
+ * @param char* the input value of the lexer.
+ *
+ * @return an error code or 0 in case of success.
+ */
 int init_lexer(Lexer* lxr, char* value) {
     if (!lxr || !value) {
         return ENULLPTR;
@@ -26,12 +32,22 @@ int init_lexer(Lexer* lxr, char* value) {
     return SUCCESS;
 }
 
+/** Lexer's freer function
+ *
+ * @param lxr to be freed
+ */
 void free_lexer(Lexer* lxr) {
     if (lxr) {
         free(lxr);
     }
 }
 
+/** Move the buffer's lexer position to the next one if possible.
+ *
+ * @param lxr the lexer context
+ *
+ * @return an error code or 0 in case oof success.
+ */
 int forward_buf(Lexer* lxr) {
     if (!lxr) {
         return ENULLPTR;
@@ -47,7 +63,10 @@ int forward_buf(Lexer* lxr) {
     return SUCCESS;
 }
 
-
+/**
+ *TODO: comment this one !
+ *
+ */
 int init_token(Token* tkn, const char* value, TokenType type) {
     errno = 0;
     if (!tkn || !value || !type) {
@@ -66,6 +85,9 @@ int init_token(Token* tkn, const char* value, TokenType type) {
     return SUCCESS;
 }
 
+/**
+ *TODO: comment this one !
+ */
 void free_token(Token* tkn) {
     if (tkn) {
         if (tkn->value) {

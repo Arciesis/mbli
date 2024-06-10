@@ -55,11 +55,14 @@ int check_extension(int argc, const char** argv) {
 }
 
 // TODO: use the freer function instead of manually do it
+
 /**
  * Initialize the Source Reader.
  *
  * @param reader The SourceReader pointer.
  * @param filename the source code filename to read.
+ *
+ * @return an error code or 0 in case of success.
  */
 int init_source_code(SourceReader* reader, const char* filename) {
     errno = 0;
@@ -127,7 +130,7 @@ void free_source(SourceReader* reader) {
  *
  * @param reader the source code reader
  *
- * @return error code or 0 in case of success
+ * @return an error code or 0 in case of success
  */
 int read_src_to_buf(SourceReader* reader) {
     errno = 0;

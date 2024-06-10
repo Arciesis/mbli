@@ -43,7 +43,7 @@ typedef struct {
 } FSM_Transition;
 
 void handle_number(FiniteStateMachine* fsm);
-void handle_keyword(FiniteStateMachine* fsm);
+void handle_alpha(FiniteStateMachine* fsm);
 void handle_space(FiniteStateMachine* fsm);
 void handle_newl(FiniteStateMachine* fsm);
 void handle_end(FiniteStateMachine* fsm);
