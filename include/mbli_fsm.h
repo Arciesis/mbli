@@ -1,5 +1,6 @@
 #ifndef MBLI_FSM_H
 #define MBLI_FSM_H
+#define MAX_LEXEME_BUF_SIZE 512
 
 #include "mbli_lexer.h"
 
@@ -41,6 +42,8 @@ typedef struct {
     FSM_Event event;
     stateFunction fn;
 } FSM_Transition;
+
+void process_char(FiniteStateMachine* fsm, int which_var, const char processing_char);
 
 void handle_number(FiniteStateMachine* fsm);
 void handle_alpha(FiniteStateMachine* fsm);
