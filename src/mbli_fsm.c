@@ -112,6 +112,38 @@ void fatal_fsm_error(FiniteStateMachine* fsm) {
     fsm->actual_st = st_end;
 }
 
+/**
+ *
+ * @param which_var tell the function if i'ts a new line (2), a space (1), or a
+ * regular char (0) in order to set the affected values properly.
+ */
+void process_char(FiniteStateMachine* fsm, int which_var,
+                  const char processing_char) {
+    switch (which_var) {
+        case 0:
+            fsm->lexeme[fsm->lexeme_pos] = processing_char;
+            fsm->lexeme_pos++;
+            fsm->column++;
+            break;
+        case 1:
+            fsm->lexeme_pos = 0;
+            fsm->lexeme[fsm->lexeme_pos] = processing_char;
+            fsm->lexeme_pos = 1;
+            fsm->line++;
+            fsm->column = 0;
+            break;
+        case 2:
+            fsm->lexeme[fsm->lexeme_pos] = '\0';
+            fsm->lexeme_pos = 0;
+            fsm->column = 0;
+            fsm->line++;
+            break;
+        default:
+            printf("Programming error!");
+            exit(EXIT_FAILURE);
+    }
+}
+
 /** handle all type of number event (aka: input).
  *
  * @param FiniteStaeMachine in use.
@@ -119,37 +151,26 @@ void fatal_fsm_error(FiniteStateMachine* fsm) {
 void handle_number(FiniteStateMachine* fsm) {
     switch (fsm->actual_st) {
         case st_start:
-            fsm->lexeme[fsm->lexeme_pos] = fsm->lxr->current_char;
-            fsm->lexeme_pos++;
-            fsm->column++;
-            // Token gen goes here or does it ?
+            process_char(fsm, 0, (const char)fsm->lxr->current_pos);
             fsm->actual_st = st_innumber;
             break;
         case st_innumber:
-            fsm->lexeme[fsm->lexeme_pos] = fsm->lxr->current_char;
-            fsm->lexeme_pos++;
-            fsm->column++;
+            process_char(fsm, 0, (const char)fsm->lxr->current_pos);
             fsm->actual_st = st_innumber;
             break;
         case st_inidentifier:
-            fsm->lexeme[fsm->lexeme_pos] = fsm->lxr->current_char;
-            fsm->lexeme_pos++;
-            fsm->column++;
+            process_char(fsm, 0, (const char)fsm->lxr->current_pos);
             fsm->actual_st = st_inidentifier;
             break;
         case st_inspace:
-            fsm->lexeme[0] = fsm->lxr->current_char;
-            fsm->lexeme_pos = 1;
-            fsm->column++;
+            process_char(fsm, 0, (const char)fsm->lxr->current_pos);
             fsm->actual_st = st_innumber;
             break;
         case st_inkeyword:
             fsm->actual_st = st_any;
             break;
         case st_newl:
-            fsm->lexeme[0] = fsm->lxr->current_char;
-            fsm->lexeme_pos = 1;
-            fsm->column++;
+            process_char(fsm, 2, (const char)fsm->lxr->current_pos);
             fsm->actual_st = st_innumber;
             break;
         case st_any:
@@ -171,9 +192,35 @@ void handle_number(FiniteStateMachine* fsm) {
  * @param FiniteStateMachine the fsm in use.
  */
 void handle_alpha(FiniteStateMachine* fsm) {
-    printf("In unwritten function\n");
-    fsm->lexeme[0] = ' ';
-    fsm->actual_st = st_end;
+    switch (fsm->actual_st) {
+        case st_start:
+
+            break;
+        case st_innumber:
+
+            break;
+        case st_inidentifier:
+
+            break;
+        case st_inspace:
+
+            break;
+        case st_inkeyword:
+
+            break;
+        case st_newl:
+
+            break;
+        case st_any:
+
+            break;
+        case st_end:
+
+            break;
+        default:
+            fsm->actual_st = st_any;
+            break;
+    }
 }
 
 /** Handle all spaces event (aka input char).
@@ -183,9 +230,7 @@ void handle_alpha(FiniteStateMachine* fsm) {
 void handle_space(FiniteStateMachine* fsm) {
     switch (fsm->actual_st) {
         case st_start:
-            fsm->lexeme[fsm->lexeme_pos] = ' ';
-            fsm->lexeme_pos++;
-            fsm->column++;
+            process_char(fsm, 1, (const char)fsm->lxr->current_pos);
             fsm->actual_st = st_inspace;
             break;
         case st_innumber:
@@ -196,20 +241,24 @@ void handle_space(FiniteStateMachine* fsm) {
             fsm->actual_st = st_inspace;
             break;
         case st_inidentifier:
-
-            break;
-        case st_inspace:
-            fsm->lexeme[fsm->lexeme_pos] = ' ';
-            fsm->lexeme_pos++;
+            fsm->lexeme[fsm->lexeme_pos] = '\0';
+            printf("%s\n", fsm->lexeme);  // Tokenisation goes here.
+            fsm->lexeme_pos = 0;
+            fsm->column++;
             fsm->actual_st = st_inspace;
             break;
+        case st_inspace:
+            process_char(fsm, 1, (const char)fsm->lxr->current_pos);
+            break;
         case st_inkeyword:
-
+            fsm->lexeme[fsm->lexeme_pos] = '\0';
+            printf("%s\n", fsm->lexeme);  // Tokenisation goes here.
+            fsm->lexeme_pos = 0;
+            fsm->column++;
+            fsm->actual_st = st_inspace;
             break;
         case st_newl:
-            fsm->lexeme[fsm->lexeme_pos] = ' ';
-            fsm->column++;
-            fsm->lexeme_pos++;
+            process_char(fsm, 1, (const char)fsm->lxr->current_pos);
             fsm->actual_st = st_inspace;
             break;
         case st_any:
@@ -221,7 +270,7 @@ void handle_space(FiniteStateMachine* fsm) {
             fsm->actual_st = st_end;
             break;
         default:
-
+            fsm->actual_st = st_any;
             break;
     }
 }
@@ -246,45 +295,23 @@ void handle_newl(FiniteStateMachine* fsm) {
             fsm->actual_st = st_newl;
             break;
         case st_innumber:
-            fsm->lexeme[fsm->lexeme_pos] = '\0';
-            /* fsm->lexeme_pos++; // I'm not entirely sure that's needed !*/
-            printf("%s\n", fsm->lexeme);  // Tokenisation goes here ! And reset
-                                          // the lexeme pos etc...
-            fsm->lexeme_pos = 0;
-            fsm->line++;
-            fsm->column = 0;
+            process_char(fsm, 2, (const char)fsm->lxr->current_char);
             fsm->actual_st = st_newl;
             break;
         case st_inidentifier:
-            fsm->lexeme[fsm->lexeme_pos] = '\0';
-            printf("%s\n", fsm->lexeme);
-            fsm->lexeme_pos = 0;
-            fsm->line++;
-            fsm->column = 0;
+            process_char(fsm, 2, (const char)fsm->lxr->current_char);
             fsm->actual_st = st_newl;
             break;
         case st_inspace:
-            fsm->lexeme[fsm->lexeme_pos] = '\0';
-            printf("%s\n", fsm->lexeme);
-            fsm->lexeme_pos = 0;
-            fsm->line++;
-            fsm->column = 0;
+            process_char(fsm, 2, (const char)fsm->lxr->current_char);
             fsm->actual_st = st_newl;
             break;
         case st_inkeyword:
-            fsm->lexeme[fsm->lexeme_pos] = '\0';
-            printf("%s\n", fsm->lexeme);
-            fsm->lexeme_pos = 0;
-            fsm->line++;
-            fsm->column = 0;
+            process_char(fsm, 2, (const char)fsm->lxr->current_char);
             fsm->actual_st = st_newl;
             break;
         case st_newl:
-            fsm->lexeme[fsm->lexeme_pos] = '\0';
-            printf("%s\n", fsm->lexeme);
-            fsm->lexeme_pos = 0;
-            fsm->line++;
-            fsm->column = 0;
+            process_char(fsm, 2, (const char)fsm->lxr->current_char);
             fsm->actual_st = st_newl;
             break;
         case st_any:
