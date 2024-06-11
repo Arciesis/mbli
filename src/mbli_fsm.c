@@ -15,8 +15,7 @@
  * @return the FiniteStateMachine's pointer
  */
 FiniteStateMachine* init_fsm(Lexer* lxr) {
-    FiniteStateMachine* fsm =
-        (FiniteStateMachine*)malloc(sizeof(FiniteStateMachine));
+    FiniteStateMachine* fsm = (FiniteStateMachine*)malloc(sizeof(FiniteStateMachine));
     fsm->actual_st = st_start;
     fsm->lxr = lxr;
     fsm->line = 0;
@@ -107,8 +106,7 @@ void error(FiniteStateMachine* fsm) {
  * @param FiniteStateMachine the fsm in use.
  */
 void fatal_fsm_error(FiniteStateMachine* fsm) {
-    printf("Should not append !\nThe issue occurred in %ld:%ld", fsm->line,
-           fsm->column);
+    printf("Should not append !\nThe issue occurred in %ld:%ld", fsm->line, fsm->column);
     fsm->actual_st = st_end;
 }
 
@@ -117,8 +115,7 @@ void fatal_fsm_error(FiniteStateMachine* fsm) {
  * @param which_var tell the function if i'ts a new line (2), a space (1), or a
  * regular char (0) in order to set the affected values properly.
  */
-void process_char(FiniteStateMachine* fsm, int which_var,
-                  const char processing_char) {
+void process_char(FiniteStateMachine* fsm, int which_var, const char processing_char) {
     switch (which_var) {
         case 0:
             fsm->lexeme[fsm->lexeme_pos] = processing_char;
@@ -409,10 +406,8 @@ void run_fsm(Lexer* lxr) {
     while (st_end != fsm->actual_st) {
         FSM_Event event = get_next_event(lxr);
         for (unsigned long i = 0; i < RULESET_COUNT; i++) {
-            if ((fsm->actual_st == ruleset[i].state) ||
-                (st_any == ruleset[i].state)) {
-                if ((event == ruleset[i].event) ||
-                    (ev_any == ruleset[i].event)) {
+            if ((fsm->actual_st == ruleset[i].state) || (st_any == ruleset[i].state)) {
+                if ((event == ruleset[i].event) || (ev_any == ruleset[i].event)) {
                     (ruleset[i].fn)(fsm);
                     break;
                 }

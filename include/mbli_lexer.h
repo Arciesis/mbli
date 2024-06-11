@@ -18,42 +18,12 @@ typedef struct {
     char* input_buf;
 } Lexer;
 
-/**
- * @enum representing the different token types.
- *
- * @var keyword.
- * @var identifiers.
- * @var operator.
- * @var delimiter.
- * @var comment.
- */
-typedef enum {
-    keyword,
-    identifiers,
-    literals,
-    operators,
-    delimiters,
-    comment,
-    whitespace,
-} TokenType;
 
-/**
- * @struct representing a Token.
- *
- * @var type represent the type of the token.
- * @var value the string of the token (\0 terminated)
- */
-typedef struct {
-    TokenType type;
-    char* value;
-} Token;
 
 int init_lexer(Lexer* lxr, char* value);
 void free_lexer(Lexer* lxr);
 int forward_buf(Lexer* lxr);
 
 
-int init_token(Token* tkn, const char* value, TokenType type);
-void free_token(Token* tkn);
 
 #endif

@@ -63,36 +63,3 @@ int forward_buf(Lexer* lxr) {
     return SUCCESS;
 }
 
-/**
- *TODO: comment this one !
- *
- */
-int init_token(Token* tkn, const char* value, TokenType type) {
-    errno = 0;
-    if (!tkn || !value || !type) {
-        errno = EINVAL;
-        return errno;
-    }
-
-    size_t value_len = strlen(value);
-    tkn->value = (char*)malloc(sizeof(char*) * value_len + sizeof(char*));
-    if (errno) {
-        return errno;
-    }
-
-    tkn->value = strcpy(tkn->value, value);
-
-    return SUCCESS;
-}
-
-/**
- *TODO: comment this one !
- */
-void free_token(Token* tkn) {
-    if (tkn) {
-        if (tkn->value) {
-            free((void*)tkn->value);
-        }
-        free(tkn);
-    }
-}

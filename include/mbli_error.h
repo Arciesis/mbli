@@ -9,6 +9,7 @@
 #define EMALLOC 5 // Malloc's error
 #define EREAD 6 // fread error
 #define EEBUF 7 // End Of buffer
+#define ENOTKN 8 // No token in the queue.
 
 
 #endif
