@@ -6,6 +6,7 @@
 
 #include "mbli_error.h"
 #include "mbli_lexer.h"
+#include "mbli_token.h"
 
 /** Initialize a FiniteStateMachine component with all the values that are
  * needed.
@@ -14,14 +15,17 @@
  *
  * @return the FiniteStateMachine's pointer
  */
-FiniteStateMachine* init_fsm(Lexer* lxr) {
-    FiniteStateMachine* fsm = (FiniteStateMachine*)malloc(sizeof(FiniteStateMachine));
+FiniteStateMachine *init_fsm(Lexer *lxr) {
+    FiniteStateMachine *fsm = (FiniteStateMachine *)malloc(sizeof(FiniteStateMachine));
     fsm->actual_st = st_start;
     fsm->lxr = lxr;
     fsm->line = 0;
     fsm->column = 0;
     *fsm->lexeme = ' ';
     fsm->lexeme_pos = 0;
+
+    fsm->tokens_queue = (TokenQueue *)malloc(sizeof(TokenQueue));
+    init_token_queue(fsm->tokens_queue);
 
     return fsm;
 }
@@ -30,8 +34,11 @@ FiniteStateMachine* init_fsm(Lexer* lxr) {
  *
  * @param FiniteSateMachine to free.
  */
-void free_fsm(FiniteStateMachine* fsm) {
+void free_fsm(FiniteStateMachine *fsm) {
     if (fsm) {
+        if (fsm->tokens_queue) {
+            free_token_queue(fsm->tokens_queue);
+        }
         free(fsm);
     }
 }
@@ -44,7 +51,7 @@ void free_fsm(FiniteStateMachine* fsm) {
  *
  * @return FSM_Event the event that needs to be process.
  */
-FSM_Event get_next_event(Lexer* lxr) {
+FSM_Event get_next_event(Lexer *lxr) {
     if (lxr->current_char == '\n') {
         int forward_res = forward_buf(lxr);
         if (ENULLPTR == forward_res) {
@@ -95,7 +102,7 @@ FSM_Event get_next_event(Lexer* lxr) {
  *
  * @param FiniteStateMachine the fsm in use.
  */
-void error(FiniteStateMachine* fsm) {
+void error(FiniteStateMachine *fsm) {
     printf("Error while processing the file: %ld:%ld", fsm->line, fsm->column);
     fsm->actual_st = st_end;
 }
@@ -105,7 +112,7 @@ void error(FiniteStateMachine* fsm) {
  *
  * @param FiniteStateMachine the fsm in use.
  */
-void fatal_fsm_error(FiniteStateMachine* fsm) {
+void fatal_fsm_error(FiniteStateMachine *fsm) {
     printf("Should not append !\nThe issue occurred in %ld:%ld", fsm->line, fsm->column);
     fsm->actual_st = st_end;
 }
@@ -115,7 +122,7 @@ void fatal_fsm_error(FiniteStateMachine* fsm) {
  * @param which_var tell the function if i'ts a new line (2), a space (1), or a
  * regular char (0) in order to set the affected values properly.
  */
-void process_char(FiniteStateMachine* fsm, int which_var, const char processing_char) {
+void process_char(FiniteStateMachine *fsm, int which_var, const char processing_char) {
     switch (which_var) {
         case 0:
             fsm->lexeme[fsm->lexeme_pos] = processing_char;
@@ -141,11 +148,40 @@ void process_char(FiniteStateMachine* fsm, int which_var, const char processing_
     }
 }
 
+void process_new_token(FiniteStateMachine *fsm) {
+    Token *tkn = init_token();
+    int write_res = -1;
+    switch (fsm->actual_st) {
+        case st_innumber:
+            write_res = write_token(tkn, fsm->lexeme, literals);
+            fsm->column++;
+            break;
+        case st_inkeyword:
+            write_res = write_token(tkn, fsm->lexeme, keyword);
+            fsm->column++;
+            break;
+        case st_inidentifier:
+            write_res = write_token(tkn, fsm->lexeme, identifiers);
+            fsm->column++;
+            break;
+        default:
+            printf("ERROR: programmatic error !\n");
+            break;
+    }
+
+    if (!write_res) {
+        enqueue_token(fsm->tokens_queue, tkn);
+        fsm->lexeme_pos = 0;
+    } else {
+        printf("ERROR: while processing a new token!\n");
+    }
+}
+
 /** handle all type of number event (aka: input).
  *
  * @param FiniteStaeMachine in use.
  */
-void handle_number(FiniteStateMachine* fsm) {
+void handle_number(FiniteStateMachine *fsm) {
     switch (fsm->actual_st) {
         case st_start:
             process_char(fsm, 0, (const char)fsm->lxr->current_pos);
@@ -188,7 +224,7 @@ void handle_number(FiniteStateMachine* fsm) {
  *
  * @param FiniteStateMachine the fsm in use.
  */
-void handle_alpha(FiniteStateMachine* fsm) {
+void handle_alpha(FiniteStateMachine *fsm) {
     switch (fsm->actual_st) {
         case st_start:
 
@@ -224,7 +260,7 @@ void handle_alpha(FiniteStateMachine* fsm) {
  *
  * @param FiniteStateMachine in use/
  */
-void handle_space(FiniteStateMachine* fsm) {
+void handle_space(FiniteStateMachine *fsm) {
     switch (fsm->actual_st) {
         case st_start:
             process_char(fsm, 1, (const char)fsm->lxr->current_pos);
@@ -232,16 +268,12 @@ void handle_space(FiniteStateMachine* fsm) {
             break;
         case st_innumber:
             fsm->lexeme[fsm->lexeme_pos] = '\0';
-            printf("%s\n", fsm->lexeme);  // Tokenisation goes here.
-            fsm->lexeme_pos = 0;
-            fsm->column++;
+            process_new_token(fsm);
             fsm->actual_st = st_inspace;
             break;
         case st_inidentifier:
             fsm->lexeme[fsm->lexeme_pos] = '\0';
-            printf("%s\n", fsm->lexeme);  // Tokenisation goes here.
-            fsm->lexeme_pos = 0;
-            fsm->column++;
+            process_new_token(fsm);
             fsm->actual_st = st_inspace;
             break;
         case st_inspace:
@@ -249,9 +281,7 @@ void handle_space(FiniteStateMachine* fsm) {
             break;
         case st_inkeyword:
             fsm->lexeme[fsm->lexeme_pos] = '\0';
-            printf("%s\n", fsm->lexeme);  // Tokenisation goes here.
-            fsm->lexeme_pos = 0;
-            fsm->column++;
+            process_new_token(fsm);
             fsm->actual_st = st_inspace;
             break;
         case st_newl:
@@ -276,7 +306,7 @@ void handle_space(FiniteStateMachine* fsm) {
  *
  * @param FiniteStateMachine in use.
  */
-void handle_end(FiniteStateMachine* fsm) {
+void handle_end(FiniteStateMachine *fsm) {
     fsm->lexeme[0] = '\0';
     fsm->actual_st = st_end;
 }
@@ -285,7 +315,7 @@ void handle_end(FiniteStateMachine* fsm) {
  *
  * @param FiniteStateMachine in use.
  */
-void handle_newl(FiniteStateMachine* fsm) {
+void handle_newl(FiniteStateMachine *fsm) {
     switch (fsm->actual_st) {
         case st_start:
             fsm->line++;
@@ -401,8 +431,8 @@ FSM_Transition ruleset[] = {
  *
  * @param Lexer* the context in which the fsm must be run.
  */
-void run_fsm(Lexer* lxr) {
-    FiniteStateMachine* fsm = init_fsm(lxr);
+void run_fsm(Lexer *lxr) {
+    FiniteStateMachine *fsm = init_fsm(lxr);
     while (st_end != fsm->actual_st) {
         FSM_Event event = get_next_event(lxr);
         for (unsigned long i = 0; i < RULESET_COUNT; i++) {

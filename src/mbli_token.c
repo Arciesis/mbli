@@ -8,7 +8,18 @@
 #include "mbli_common.h"
 #include "mbli_error.h"
 
-/** Initialization function for the token struct,
+/** Initialize a token.
+ * Since a comment is not takken into account it's the initial state of the token.
+ */
+Token *init_token(void) {
+    Token *tkn = (Token *)malloc(sizeof(Token));
+    tkn->type = comment;
+    tkn->value = NULL;
+    return tkn;
+
+}
+
+/** write a token.
  *
  * @param tkn the token to be initialized.
  * @param value the input char*.
@@ -16,14 +27,15 @@
  *
  * @return a positive value in cvase of success and 0 otherwise.
  */
-int init_token(Token* tkn, const char* value, TokenType type) {
+int write_token(Token *tkn, const char *value, TokenType type) {
     errno = 0;
+    // FIXME: Do I need toc heck type ?
     if (!value || !type) {
         return EINVAL;
     }
 
     size_t value_len = strlen(value);
-    tkn->value = (char*)malloc(sizeof(char*) * value_len + sizeof(char*));
+    tkn->value = (char *)malloc(sizeof(char *) * value_len + sizeof(char *));
     if (errno) {
         return errno;
     }
@@ -38,10 +50,10 @@ int init_token(Token* tkn, const char* value, TokenType type) {
  *
  * @param tkn the token to free.
  */
-void free_token(Token* tkn) {
+void free_token(Token *tkn) {
     if (tkn) {
         if (tkn->value) {
-            free((void*)tkn->value);
+            free((void *)tkn->value);
         }
         free(tkn);
     }
@@ -51,9 +63,9 @@ void free_token(Token* tkn) {
  *
  * @param queue the queue's pointer to initialize.
  */
-void init_token_queue(TokenQueue* queue) {
+void init_token_queue(TokenQueue *queue) {
     queue->capacity = 0;
-    queue->count = -1;
+    queue->count = 0;
     queue->tokens = NULL;
 }
 
@@ -62,12 +74,13 @@ void init_token_queue(TokenQueue* queue) {
  * @param queue the queue.
  * @param tkn the token to add to the queue.
  */
-void enqueue_token(TokenQueue* queue, Token* tkn) {
+void enqueue_token(TokenQueue *queue, Token *tkn) {
     queue->count++;
 
+    // TODO: Opti: > || >= ???
     if (queue->count >= queue->capacity) {
         size_t new_capacity = GROW_CAPACITY(queue->capacity);
-        queue->tokens = GROW_QUEUE(Token*, queue->tokens, new_capacity);
+        queue->tokens = GROW_QUEUE(Token *, queue->tokens, new_capacity);
     }
 
     queue->tokens[queue->count] = tkn;
@@ -79,22 +92,25 @@ void enqueue_token(TokenQueue* queue, Token* tkn) {
  *
  * @return 0 in case of failure and a positive value otherwise.
  */
-static int dequeue_token(TokenQueue* queue) {
-    if (is_token_queue_empty((const TokenQueue*)queue)) {
+static int dequeue_token(TokenQueue *queue) {
+    if (is_token_queue_empty((const TokenQueue *)queue)) {
         return ENOTKN;
     }
 
-    if (queue->count < 1) {
+    if (1 == queue->count) {
         queue->count--;
         return SUCCESS;
     }
 
-    queue->tokens[0] = queue->tokens[1];
+    for (size_t i = QUEUE_MIN_COUNT; i < queue->count; i++) {
+        queue->tokens[i] = queue->tokens[i + 1];
+    }
+
     queue->count--;
 
+    // if the allocate space is larger than 2 times of the taken space then reduce it by a factor 2
     if (queue->count < queue->capacity / 2) {
-        // FIXME: Might be an error here but don't know for sure yet!
-        GROW_QUEUE(Token*, queue, (queue->count));
+        GROW_QUEUE(Token *, queue, (queue->count));
     }
 
     return SUCCESS;
@@ -106,10 +122,14 @@ static int dequeue_token(TokenQueue* queue) {
  *
  * @return the first Token* of the queue.
  */
-Token* peek_token(TokenQueue* queue) {
-    Token* first_token = queue->tokens[0];
-    dequeue_token(queue);
-    return first_token;
+Token *peek_token(TokenQueue *queue) {
+    if (queue->count >= QUEUE_MIN_COUNT) {
+        Token *first_token = queue->tokens[QUEUE_MIN_COUNT];
+        dequeue_token(queue);
+        return first_token;
+    }
+
+    return NULL;
 }
 
 /** Tell whether the queue is empty or not.
@@ -118,16 +138,17 @@ Token* peek_token(TokenQueue* queue) {
  *
  * @return 1 if the queue is empty and 0 otherwise.
  */
-int is_token_queue_empty(const TokenQueue* queue) { return (!queue->count); }
+int is_token_queue_empty(const TokenQueue *queue) { return (!queue->count); }
 
 /** Free the entire queue.
  *
  * @param queue the queue.
  */
-void free_token_queue(TokenQueue* queue) {
+void free_token_queue(TokenQueue *queue) {
     while (!is_token_queue_empty(queue)) {
-        Token* first_token = peek_token(queue);
+        Token *first_token = peek_token(queue);
         free_token(first_token);
     }
     FREE_QUEUE(TokenQueue, queue);
+    init_token_queue(queue);
 }

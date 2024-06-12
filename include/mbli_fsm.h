@@ -1,5 +1,6 @@
 #ifndef MBLI_FSM_H
 #define MBLI_FSM_H
+#include "mbli_token.h"
 #define MAX_LEXEME_BUF_SIZE 512
 
 #include "mbli_lexer.h"
@@ -32,7 +33,7 @@ typedef struct {
     size_t line;
     size_t column;
     size_t lexeme_pos;
-    // TODO: Maybe add a queue here for the token implementation !
+    TokenQueue* tokens_queue;
 } FiniteStateMachine;
 
 typedef void (*stateFunction)(FiniteStateMachine* fsm);
@@ -44,6 +45,7 @@ typedef struct {
 } FSM_Transition;
 
 void process_char(FiniteStateMachine* fsm, int which_var, const char processing_char);
+void process_new_token(FiniteStateMachine* fsm);
 
 void handle_number(FiniteStateMachine* fsm);
 void handle_alpha(FiniteStateMachine* fsm);

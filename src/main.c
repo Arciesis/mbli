@@ -45,27 +45,8 @@ int main(int argc, const char** argv) {
     if (lxr_init_res) {
         return lxr_init_res;
     }
-    
-    TokenQueue* queue = (TokenQueue*)malloc(sizeof(TokenQueue));
-    init_token_queue(queue);
 
-    Token* tkn = (Token*)malloc(sizeof(Token));
-    const char* testVal = "test";
-    int tkn_res = init_token(tkn, testVal, identifiers);
-    if (tkn_res) {
-        return 56;
-    }
-
-    enqueue_token(queue, tkn);
-    Token* ftkn = peek_token(queue);
-    if (!ftkn) {
-        printf("youipinase!\n");
-        return 46;
-    }
-    printf("%s\n", ftkn->value);
-    free_token_queue(queue);
-
-    /* run_fsm(lxr); */
+    run_fsm(lxr);
     
     free_source(reader);
     free_lexer(lxr);

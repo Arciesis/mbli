@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 
+#define QUEUE_MIN_COUNT 1
+
 /**
  * @enum representing the different token types.
  *
@@ -39,7 +41,8 @@ typedef struct {
     Token** tokens;
 } TokenQueue;
 
-int init_token(Token* tkn, const char* value, TokenType type);
+Token *init_token(void);
+int write_token(Token *tkn, const char *value, TokenType type);
 void free_token(Token* tkn);
 
 void init_token_queue(TokenQueue* queue);
