@@ -32,24 +32,23 @@ typedef enum {
  */
 typedef struct {
     TokenType type;
-    char* value;
+    char *value;
 } Token;
 
 typedef struct {
     size_t count;
     size_t capacity;
-    Token** tokens;
+    Token **tokens;
 } TokenQueue;
 
 Token *init_token(void);
 int write_token(Token *tkn, const char *value, TokenType type);
-void free_token(Token* tkn);
+void free_token(Token *tkn);
 
-void init_token_queue(TokenQueue* queue);
-void enqueue_token(TokenQueue* queue, Token* tkn);
-/* static int dequeue_token(TokenQueue* queue); */
-Token* peek_token(TokenQueue* queue);
-int is_token_queue_empty(const TokenQueue* queue);
-void free_token_queue(TokenQueue* queue);
+void init_token_queue(TokenQueue *queue);
+void enqueue_token(TokenQueue *queue, Token *tkn);
+Token *peek_token(TokenQueue *queue);
+int is_token_queue_empty(const TokenQueue *queue);
+void free_token_queue(TokenQueue *queue);
 
 #endif

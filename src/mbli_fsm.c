@@ -165,7 +165,7 @@ void process_new_token(FiniteStateMachine *fsm) {
             fsm->column++;
             break;
         default:
-            printf("ERROR: programmatic error !\n");
+            printf("ERROR: programmatic !\n");
             break;
     }
 

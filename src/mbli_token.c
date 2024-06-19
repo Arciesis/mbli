@@ -116,7 +116,7 @@ static int dequeue_token(TokenQueue *queue) {
     return SUCCESS;
 }
 
-/** return the first element of the queue.
+/** return the first element of the queue and remove it from the queue.
  *
  * @param queue the queue.
  *
